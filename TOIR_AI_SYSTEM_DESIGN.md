@@ -58,7 +58,7 @@ JWT: `org_id` + `roles`. После логина клиент вызывает *
 | **zitadel** (IdP) | Organization, User, Project roles, invite | OIDC: Authorization Code + PKCE; выдаёт JWT. Клиенты ходят в Zitadel напрямую (`https://auth.formaverse.ru`). Канон: [`masterdoc-zitadel`](https://github.com/masterdoc-app/masterdoc-zitadel). Self-host РФ |
 | **feature-service** | матрица фич user×org (роль + org flags) | внутренний `GET /me` → `{ userInfo, features }`. Снаружи только через api-gateway. Клиентский DI: dispatcher → `board`; engineer → `copilot` |
 | **catalog-service** | Site, EquipmentCategory, Asset | `/sites`, `/assets`, `/equipment-categories`, `/assets/from-documents` |
-| **dashboard-service** | WorkOrder, JournalEntry, MaintenancePlan, Checklist, scheduler | `/work-orders`, `/journal-entries`; фаза 2: `/maintenance-plans`, `/checklists`, calendar |
+| **dashboard-service** | WorkOrder, MaintenanceMap (ППР), scheduler; JournalEntry later | `/work-orders`, `/work-orders/board`, `/maintenance-maps`; фаза 2: journal, checklists, calendar |
 | **document-service** | meta документов; файлы в MinIO | `/documents`, `/assets/{id}/documents` |
 | **report-service** | проекции / read-replica | `/export/journal`, конструктор отчётов |
 | **notification-service** | очередь push | consumers событий |

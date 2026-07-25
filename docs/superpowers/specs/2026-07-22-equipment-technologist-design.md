@@ -52,8 +52,12 @@ Storage: `{DOCUMENT_STORAGE_DIR}/{orgId}/{id}.pdf` + sidecar `{id}.meta.json`. R
 | GET | `/maintenance-maps?assetId=` | `{ items }` |
 | GET | `/maintenance-maps/{id}` | map |
 | PATCH | `/maintenance-maps/{id}` | update draft fields |
-| POST | `/maintenance-maps/{id}/confirm` | active |
+| POST | `/maintenance-maps/{id}/confirm` | active (+ sets `activatedAt`, triggers PPR→WO tick) |
 | POST | `/maintenance-maps/{id}/reject` | 204 |
+
+### Work orders · `dashboard-service` :8092 (gateway feature `board`)
+
+See [2026-07-25-work-orders-board-design.md](2026-07-25-work-orders-board-design.md): `POST/GET/PATCH /work-orders`, `GET /work-orders/board`.
 
 ### Technologist jobs · `technologist-service` :8095
 
