@@ -170,7 +170,7 @@ See [2026-07-25-work-orders-board-design.md](2026-07-25-work-orders-board-design
 
 Item shape: `{ title, kind, interval: { every, unit }, criticality, sourceRef? }`.
 
-## MCP · `document-mcp` :8096
+## MCP · `document-mcp` :8097
 
 | Tool | Required args |
 |------|----------------|
@@ -196,7 +196,7 @@ Item shape: `{ title, kind, interval: { every, unit }, criticality, sourceRef? }
 | `document-service` | 8093 |
 | `technologist-mcp` | 8094 |
 | `technologist-service` | 8095 |
-| `document-mcp` | 8096 |
+| `document-mcp` | 8097 |
 
 ## Non-goals
 
