@@ -8,7 +8,7 @@
 
 - `dashboard-service` owns **WorkOrder** + weekly **board** + **PPR scheduler** (auto-create from active maintenance maps).
 - Public paths via **api-gateway** under feature `board` (`/work-orders`).
-- UI (board card + full-screen detail) — **follow-up**, not this slice.
+- UI (7-day board + duration hours) — see [2026-07-26-board-seven-day-duration-design.md](2026-07-26-board-seven-day-duration-design.md).
 
 ## Types and lifecycle
 
