@@ -10,7 +10,7 @@
 
 ## Admin UI
 
-Under client-app **Админ** (`user_invite`): tabs Пользователи | Площадки | Журнал.
+Under client-app **Админ** (`admin`): tabs Пользователи | Площадки | Журнал.
 
 ## black-box-service
 
@@ -22,7 +22,7 @@ Secrets in summaries are redacted; bodies truncated (~4 KB).
 
 - Proxy `/sites`, `/assets` → catalog (`CATALOG_SERVICE_BASE_URL`), JWT → `X-Org-Id`
 - Fire-and-forget audit to `BLACK_BOX_SERVICE_BASE_URL` (default `:8096`; optional `BLACK_BOX_INTERNAL_TOKEN`)
-- `/sites` allowed for `equipment` or `user_invite`; other equipment proxies keep their feature gates
+- `/sites` allowed for `equipment` or `admin`; other equipment proxies keep their feature gates
 
 ## Related
 
