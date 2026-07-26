@@ -16,6 +16,8 @@
 |-------|--------|
 | `type` | `ppr` \| `emergency` |
 | `status` | `new` → `in_progress` → `closed` |
+| `dueAt` | Required YYYY-MM-DD; **start** date of the work order |
+| `durationHours` | Int, `>= 1`; default **8** when omitted (create, scheduler, legacy JSON) |
 
 - Create always: `status=new`, `assigneeId=null` (other services PATCH assignee later).
 - Transitions: `new→in_progress`, `in_progress→closed`. No reopen / no cancel in MVP.
@@ -34,19 +36,19 @@ For `type=ppr`: also `maintenanceMapId` + `maintenanceMapItemId`; map must be sa
 
 | Method | Path | Notes |
 |--------|------|--------|
-| POST | `/work-orders` | Body requires `type`, `title`, `assetId`, `siteId`, `dueAt`; ppr requires map+item ids |
+| POST | `/work-orders` | Body requires `type`, `title`, `assetId`, `siteId`, `dueAt`; optional `durationHours` (default 8); ppr requires map+item ids |
 | GET | `/work-orders/{id}` | |
 | GET | `/work-orders/board?weekStart=&weeks=` | ISO weeks Mon–Sun; default `weeks=4`, `weekStart` = Monday of current UTC week |
-| PATCH | `/work-orders/{id}` | `status?`, `title?`, `dueAt?`, `assigneeId?` (JSON null clears) |
+| PATCH | `/work-orders/{id}` | `status?`, `title?`, `dueAt?`, `durationHours?`, `assigneeId?` (JSON null clears) |
 | POST | `/internal/scheduler/tick` | Idempotent PPR generation; **not** exposed on gateway |
 
-Board shape:
+Board shape (unchanged JSON; see [2026-07-26-board-seven-day-duration-design.md](2026-07-26-board-seven-day-duration-design.md) for client 7-day layout):
 
 ```json
 { "weeks": [ { "weekStart": "2026-07-20", "items": [ /* WorkOrder */ ] } ] }
 ```
 
-Empty weeks are included in the range.
+Columns are still keyed by ISO week (`weekStart` = Monday). A work order appears in every week column whose Mon–Sun calendar intersects its **workday span**: from `dueAt` (start), count `max(1, ceil(durationHours / 8))` working days (Mon–Fri only; weekends skipped). Empty weeks are included in the range.
 
 ## Scheduler
 
