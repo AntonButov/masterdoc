@@ -1,17 +1,33 @@
-# Equipment + Technologist Agent (draft-only)
+# Equipment + Technologist Agents (draft-only)
 
-**Date:** 2026-07-22  
+**Date:** 2026-07-22 · **Updated:** 2026-07-26  
 **Status:** implementation contract (synced with services) · **GTM:** feature-эксперимент «ИИ-наполнение ТОиР» — [ai-technologist-bootstrap-experiment.md](../../ai-technologist-bootstrap-experiment.md)  
 **Related:** [TOIR_AI_SYSTEM_DESIGN.md](../../TOIR_AI_SYSTEM_DESIGN.md), [B2B_MVP_SCOPE.md](../../B2B_MVP_SCOPE.md), [maintenance-map practices](2026-07-22-maintenance-map-practices.md)
 
 ## Product invariant
 
-Technologist **never** publishes to the operational ledger. MCP writes always create:
+AI agents **never** publish to the operational ledger. MCP writes always create:
 
 - `status: draft`
 - `source: ai_generated`
 
 A human with feature `equipment` confirms (`draft` → `active`) or rejects in the client.
+
+## Agent pipeline
+
+One PDF → one equipment unit → one maintenance map (many items). Host: `technologist-service` :8095 (OpenRouter `google/gemini-2.5-pro`, native PDF). Org **Fixaverse Smoke** (`383177088934346755`) uses deterministic mocks (no OpenRouter).
+
+```text
+upload PDF → POST /ai/document-validator → (optional replace) → POST /ai/equipment-card
+  → human approves card → POST /ai/technologist {documentId,siteId,assetId} → draft PPR
+  → human confirms asset + map
+```
+
+| Agent | Route | MCP | Result |
+|-------|-------|-----|--------|
+| Document validator | `POST /ai/document-validator` · `POST .../confirm-replace` | `document-mcp` | `ok` / `reject{explanation}` / `needs_replace{obsoleteDocumentIds}` |
+| Equipment card | `POST /ai/equipment-card` | `technologist-mcp` `create_draft_asset` | draft asset |
+| Technologist | `POST /ai/technologist` | `technologist-mcp` `create_draft_maintenance_map` | draft map for existing `assetId` |
 
 ## Auth
 
@@ -27,9 +43,11 @@ Paths below are what the client hits on the gateway base URL; each maps 1:1 to t
 |--------|------|----------|
 | POST | `/documents` | multipart PDF → `Document` 201 |
 | GET | `/documents?folder=` | `{ items: Document[] }` — folder = storageKey prefix; default = `orgId` |
+| GET | `/documents?sha256=` | `{ items }` matching hash in org |
 | GET | `/documents/{id}` | `Document` |
 | GET | `/documents/{id}/content` | PDF bytes (`Content-Type: application/pdf`, inline disposition) |
-| GET | `/documents/{id}/text` | `{ text }` — UTF-8 extract for the agent |
+| GET | `/documents/{id}/text` | `{ text }` — UTF-8 extract / sidecar |
+| DELETE | `/documents/{id}` | 204 |
 | POST | `/documents/from-text` | `{ text, filename? }` → fake PDF fixture 201 |
 
 Storage: `{DOCUMENT_STORAGE_DIR}/{orgId}/{id}.pdf` + sidecar `{id}.meta.json`. Restart recovers metas from disk.
@@ -43,6 +61,7 @@ Storage: `{DOCUMENT_STORAGE_DIR}/{orgId}/{id}.pdf` + sidecar `{id}.meta.json`. R
 | GET | `/assets/{id}` | `Asset` |
 | POST | `/assets/{id}/confirm` | `Asset` (active) |
 | POST | `/assets/{id}/reject` | 204 |
+| POST | `/assets/{id}/unlink-documents` | `{ documentIds }` → asset without those ids |
 
 ### Maintenance maps · `dashboard-service` :8092
 
@@ -63,9 +82,12 @@ See [2026-07-25-work-orders-board-design.md](2026-07-25-work-orders-board-design
 
 | Method | Path | Response |
 |--------|------|----------|
-| POST | `/ai/technologist` | `{ documentId, siteId? }` → job 202 (`siteId` default `default-site`) |
+| POST | `/ai/document-validator` | `{ documentId, siteId, assetId? }` → validation |
+| POST | `/ai/document-validator/confirm-replace` | `{ documentId, obsoleteDocumentIds }` → deletes via document-mcp |
+| POST | `/ai/equipment-card` | `{ documentId, siteId }` → `{ draftAssetId, asset }` |
+| POST | `/ai/technologist` | `{ documentId, siteId, assetId }` → job 202 |
 | GET | `/ai/technologist/jobs/{id}` | job |
-| POST | `/ai/technologist/jobs/{id}/confirm-package` | confirms draft asset + map |
+| POST | `/ai/technologist/jobs/{id}/confirm-package` | confirms draft map (+ asset if job still holds draftAssetId) |
 
 ## DTOs
 
@@ -124,6 +146,7 @@ See [2026-07-25-work-orders-board-design.md](2026-07-25-work-orders-board-design
     "orgId": "string",
     "documentId": "uuid",
     "siteId": "string",
+    "assetId": "uuid",
     "status": "queued|running|succeeded|failed",
     "draftAssetId": "uuid?",
     "draftMapId": "uuid?",
@@ -147,9 +170,20 @@ See [2026-07-25-work-orders-board-design.md](2026-07-25-work-orders-board-design
 
 Item shape: `{ title, kind, interval: { every, unit }, criticality, sourceRef? }`.
 
+## MCP · `document-mcp` :8096
+
+| Tool | Required args |
+|------|----------------|
+| `get_document_meta` / `get_document` | `documentId` |
+| `list_asset_documents` | `assetId` |
+| `get_asset` | `assetId` |
+| `delete_document` | `documentId` (+ optional `assetId`) |
+| `find_documents_by_sha256` | `sha256` |
+
 ## Client notes
 
 - Feature nav: `#/equipment`, `#/ppr/{mapId}`.
+- Flow: upload → validate → (replace dialog) → equipment-card draft → «В базу» starts technologist → second «В базу» publishes asset+map.
 - PDF open: `GET /documents/{id}/content` with Bearer (`OpenAuthenticatedDocument` — web/desktop; Android stub).
 - Folder list uses `storageKey` parent (usually `orgId`) so manuals appear even if not yet linked on the asset.
 
@@ -162,6 +196,7 @@ Item shape: `{ title, kind, interval: { every, unit }, criticality, sourceRef? }
 | `document-service` | 8093 |
 | `technologist-mcp` | 8094 |
 | `technologist-service` | 8095 |
+| `document-mcp` | 8096 |
 
 ## Non-goals
 
