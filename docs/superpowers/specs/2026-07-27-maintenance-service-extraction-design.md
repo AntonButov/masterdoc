@@ -1,7 +1,7 @@
 # Maintenance service extraction (ППР + MCP)
 
 **Date:** 2026-07-27  
-**Status:** approved (ready for plan)  
+**Status:** implemented  
 **Related:** [2026-07-22-equipment-technologist-design.md](2026-07-22-equipment-technologist-design.md), [2026-07-25-work-orders-board-design.md](2026-07-25-work-orders-board-design.md), [2026-07-22-maintenance-map-practices.md](2026-07-22-maintenance-map-practices.md)
 
 ## Problem

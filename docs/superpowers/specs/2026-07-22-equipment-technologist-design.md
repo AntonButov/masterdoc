@@ -1,8 +1,8 @@
 # Equipment + Technologist Agents (draft-only)
 
-**Date:** 2026-07-22 · **Updated:** 2026-07-26  
+**Date:** 2026-07-22 · **Updated:** 2026-07-27  
 **Status:** implementation contract (synced with services) · **GTM:** feature-эксперимент «ИИ-наполнение ТОиР» — [ai-technologist-bootstrap-experiment.md](../../ai-technologist-bootstrap-experiment.md)  
-**Related:** [TOIR_AI_SYSTEM_DESIGN.md](../../TOIR_AI_SYSTEM_DESIGN.md), [B2B_MVP_SCOPE.md](../../B2B_MVP_SCOPE.md), [maintenance-map practices](2026-07-22-maintenance-map-practices.md)
+**Related:** [TOIR_AI_SYSTEM_DESIGN.md](../../TOIR_AI_SYSTEM_DESIGN.md), [B2B_MVP_SCOPE.md](../../B2B_MVP_SCOPE.md), [maintenance-map practices](2026-07-22-maintenance-map-practices.md), [maintenance-service extraction](2026-07-27-maintenance-service-extraction-design.md)
 
 ## Product invariant
 
@@ -27,7 +27,7 @@ upload PDF → POST /ai/document-validator → (optional replace) → POST /ai/e
 |-------|-------|-----|--------|
 | Document validator | `POST /ai/document-validator` · `POST .../confirm-replace` | `document-mcp` | `ok` / `reject{explanation}` / `needs_replace{obsoleteDocumentIds}` |
 | Equipment card | `POST /ai/equipment-card` | `technologist-mcp` `create_draft_asset` | draft asset |
-| Technologist | `POST /ai/technologist` | `technologist-mcp` `create_draft_maintenance_map` | draft map for existing `assetId` |
+| Technologist | `POST /ai/technologist` | `maintenance-mcp` `create_draft_maintenance_map` | draft map for existing `assetId` |
 
 ## Auth
 
@@ -63,20 +63,24 @@ Storage: `{DOCUMENT_STORAGE_DIR}/{orgId}/{id}.pdf` + sidecar `{id}.meta.json`. R
 | POST | `/assets/{id}/reject` | 204 |
 | POST | `/assets/{id}/unlink-documents` | `{ documentIds }` → asset without those ids |
 
-### Maintenance maps · `dashboard-service` :8092
+### Maintenance maps · `maintenance-service` :8098 (Postgres)
+
+Gateway feature gates: `equipment` + `charts`. Persist in Postgres; MCP writes always `draft` + `ai_generated`.
 
 | Method | Path | Response |
 |--------|------|----------|
 | POST | `/maintenance-maps` | create (asset must exist in catalog) |
-| GET | `/maintenance-maps?assetId=` | `{ items }` |
+| GET | `/maintenance-maps?assetId=&status=` | `{ items }` |
 | GET | `/maintenance-maps/{id}` | map |
 | PATCH | `/maintenance-maps/{id}` | update draft fields |
-| POST | `/maintenance-maps/{id}/confirm` | active (+ sets `activatedAt`, triggers PPR→WO tick) |
+| POST | `/maintenance-maps/{id}/confirm` | active (+ `activatedAt`, then dashboard scheduler tick) |
 | POST | `/maintenance-maps/{id}/reject` | 204 |
+| GET | `/internal/active-maps?orgId=&mapId=` | active maps for dashboard PPR→WO scheduler (private network) |
 
 ### Work orders · `dashboard-service` :8092 (gateway feature `board`)
 
-See [2026-07-25-work-orders-board-design.md](2026-07-25-work-orders-board-design.md): `POST/GET/PATCH /work-orders`, `GET /work-orders/board`.
+See [2026-07-25-work-orders-board-design.md](2026-07-25-work-orders-board-design.md): `POST/GET/PATCH /work-orders`, `GET /work-orders/board`.  
+PPR→WO scheduler stays in dashboard; loads active maps from maintenance-service over HTTP.
 
 ### Technologist jobs · `technologist-service` :8095
 
@@ -159,14 +163,22 @@ See [2026-07-25-work-orders-board-design.md](2026-07-25-work-orders-board-design
 
 ## MCP · `technologist-mcp` :8094
 
-`GET /mcp/tools` · `POST /mcp/tools/call` — **no** confirm/reject/publish tools.
+`GET /mcp/tools` · `POST /mcp/tools/call` — **no** confirm/reject/publish tools. Asset/document meta only.
 
 | Tool | Required args |
 |------|----------------|
 | `create_draft_asset` | `name`, `siteId`, `documentIds` (+ optional inventoryNo, category, description) |
+| `update_draft_asset` | `assetId` + draft fields |
+| `get_document_meta` | `documentId` |
+
+## MCP · `maintenance-mcp` :8099
+
+Draft PPR maps only; upstream `MAINTENANCE_BASE_URL` → maintenance-service.
+
+| Tool | Required args |
+|------|----------------|
 | `create_draft_maintenance_map` | `assetId`, `title`, `items[]` |
 | `update_draft_maintenance_map` | `id` + draft fields; only if `status=draft` |
-| `get_document_meta` | `documentId` |
 
 Item shape: `{ title, kind, interval: { every, unit }, criticality, sourceRef? }`.
 
@@ -197,9 +209,10 @@ Item shape: `{ title, kind, interval: { every, unit }, criticality, sourceRef? }
 | `technologist-mcp` | 8094 |
 | `technologist-service` | 8095 |
 | `document-mcp` | 8097 |
+| `maintenance-service` | 8098 |
+| `maintenance-mcp` | 8099 |
 
 ## Non-goals
 
-- Preventive WO calendar / scheduler
 - Intake / mentor / scribe agents
 - Spare parts / 1C
