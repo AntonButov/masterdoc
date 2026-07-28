@@ -37,7 +37,7 @@ Engineers today see org-wide equipment and work orders once they have product fe
 - **Filter lists, not hard ACL** `(session-settled: user-directed — chosen over hard ACL / routing-only: engineer should see only their objects in lists; deep-link ACL out of v1)`.
 - **Site and/or Asset pins, union** `(session-settled: user-directed — chosen over Site-only or Asset-only: dispatcher can bind a whole цех and/or specific units)`.
 - **Empty scope ⇒ empty filtered lists** `(session-settled: user-directed — chosen over org-wide default: unconfigured engineer sees nothing until bound)`.
-- **Dispatcher owns binding UI/API** `(session-settled: user-directed — chosen over admin / both: exploitation side manages who covers what)`.
+- **Admin owns binding UI/API** `(session-settled: user-directed — chosen over dispatcher / both: admin manages who covers what via Users; dispatcher retains WO assignment within scope)`.
 - **Filter work orders + equipment** `(session-settled: user-directed — chosen over WO-only or WO+equipment+Sites catalog: Sites remain context of scoped objects, not a filtered Sites admin list)`.
 - **Assignment must respect scope** `(session-settled: user-directed — chosen over assignee override: dispatcher cannot assign a WO to an engineer whose scope excludes that Asset)`.
 - **Live Site membership + Asset pins (approach A)** `(session-settled: user-directed — chosen over snapshot expand / Site-first-exceptions-only: new Assets at a bound Site enter scope automatically)`.
@@ -47,8 +47,8 @@ Engineers today see org-wide equipment and work orders once they have product fe
 ### Actors
 
 - A1. **Engineer** — consumes filtered WO and equipment lists; does not edit own scope.
-- A2. **Dispatcher** — creates/updates engineer Site and Asset bindings; assigns WOs only within scope.
-- A3. **Admin** — not the owner of binding in v1; sees unfiltered org catalogs where admin features apply.
+- A2. **Dispatcher** — assigns WOs only within scope; reads scope/candidates for assignee picker; does not create or change bindings in v1.
+- A3. **Admin** — owns binding UI/API write (engineer scope management via Admin → Users); sees unfiltered org catalogs where admin features apply.
 
 ### Key Flows
 
@@ -105,7 +105,7 @@ flowchart LR
 
 **Who can edit**
 
-- R8. Only the dispatcher role/capability path can create or change engineer scope bindings in v1.
+- R8. Only the admin feature path (`admin`) can create or change engineer scope bindings; dispatcher retains read access for WO candidate lists. See `docs/superpowers/specs/2026-07-28-admin-engineer-scope-binding-design.md`.
 - R9. Admin and dispatcher product surfaces that list org equipment or work orders are not filtered by engineer scope.
 
 **Move / pin semantics**
