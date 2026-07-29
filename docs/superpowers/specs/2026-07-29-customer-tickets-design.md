@@ -1,7 +1,7 @@
 # Customer «Заявки» (requester / tickets) — Design
 
 **Date:** 2026-07-29  
-**Status:** approved (session decisions + docs)  
+**Status:** implemented (PRs open; client-app CI blocked by Actions billing)  
 **Repos:** `client-app`, `feature-service`, `api-gateway-service`, `dashboard-service`, `catalog-service` (scopes reuse), `masterdoc-zitadel`  
 **Amends:** features-only catalog (`tickets` was deferred); TOIR `requester` / `userRequests` → wire feature **`tickets`** (already in client `FeatureId.Tickets`)
 
