@@ -27,6 +27,12 @@
   [30763697804](https://github.com/masterdoc-app/black-box-service/actions/runs/30763697804)
   — test PASS, Compose deploy PASS.
 
+## Smoke
+
+- Verdict: **PARTIAL/BLOCKED** after the green pipeline.
+- The service is internal-only and exposes no public smoke URL; local Docker is unavailable, so a direct `/health` or Testcontainers poke could not be performed from this workstation.
+- CI deploy completed successfully and ran the remote healthcheck.
+
 ## Concerns
 
-- Local Docker absence prevented executing the Testcontainers tests and Compose validation; GitHub test and deploy gates passed on the runner.
+- Local Docker absence prevented executing the Testcontainers tests, Compose validation, and direct API smoke; GitHub test and deploy gates passed on the runner.
