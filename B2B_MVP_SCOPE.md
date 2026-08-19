@@ -72,8 +72,12 @@ flowchart TB
 
 ### Backlog (не первые релизы)
 
-- **SparePart**, **StockMovement**, **MinStock**, **PartRequest**, роль кладовщика — склад ЗИП  
+- **PartRequest** queue, статус «Ждёт запчасть», soft reserve, min/max auto — FSM-расширение склада  
 - Подрядчики / внешний инженер (`contractor`)  
+
+### Фазированный трек: склад ЗИП (v1 — 2026-08-19)
+
+- **SparePart**, **StockMovement**, **AssetPart**, роль `storekeeper`, feature `warehouse`, приход/списание к WO, текстовые рекомендации — см. [docs/superpowers/specs/2026-08-19-warehouse-zip-design.md](docs/superpowers/specs/2026-08-19-warehouse-zip-design.md)  
 
 ---
 
