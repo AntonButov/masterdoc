@@ -88,4 +88,4 @@ JWT: `org_id` + `roles`. После логина клиент вызывает *
 | **1.1** | push, QR, feature `userRequests` | Приёмщик, Наставник, Писарь |
 | **2** | MaintenancePlan, Checklist, scheduler, календарь | пакет Технолога полностью в UI |
 | **3** | конструктор отчётов | — |
-| **Backlog** | склад ЗИП, contractor | — |
+| **Backlog** | FSM-склад (очередь PartRequest, «Ждёт запчасть»), contractor | v1 склада ЗИП: [docs/superpowers/specs/2026-08-19-warehouse-zip-design.md](docs/superpowers/specs/2026-08-19-warehouse-zip-design.md) |
